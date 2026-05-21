@@ -1048,7 +1048,8 @@ const EMAILJS_PUBLIC_KEY     = 'ayKNOdAVstT6DbOTa';
 const EMAILJS_SERVICE_ID     = 'service_nkyco2v';
 const EMAILJS_OWNER_TEMPLATE = 'template_bdc1er6';
 const EMAILJS_CUST_TEMPLATE  = 'template_m0xl9rk';
-const IMGBB_API_KEY          = 'c78cbf23601850d641dff5d4d25633f9';
+const CLOUDINARY_CLOUD_NAME  = 'dd5mf9sj9';
+const CLOUDINARY_UPLOAD_PRESET = 'crof6uuj';
 
 const PAYMENT_LINKS = {
   standard: 'https://buy.stripe.com/cNibJ2cnR0IFgLE04T0ZW00',
@@ -1196,19 +1197,13 @@ function handleFiles(input, previewsId, contentId, countId) {
 
 // ── Uploadcare ───────────────────────────────────────────
 async function uploadToImgBB(file) {
-  const base64 = await new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload  = () => resolve(reader.result.split(',')[1]);
-    reader.onerror = reject;
-    reader.readAsDataURL(file);
-  });
   const fd = new FormData();
-  fd.append('key', IMGBB_API_KEY);
-  fd.append('image', base64);
-  const res = await fetch('https://api.imgbb.com/1/upload', { method: 'POST', body: fd });
+  fd.append('file', file);
+  fd.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
+  const res = await fetch('https://api.cloudinary.com/v1_1/' + CLOUDINARY_CLOUD_NAME + '/image/upload', { method: 'POST', body: fd });
   if (!res.ok) throw new Error('Upload failed for ' + file.name);
   const data = await res.json();
-  return data.data.url_viewer;
+  return data.secure_url;
 }
 
 // ── Submit & Pay ─────────────────────────────────────────
