@@ -987,14 +987,14 @@
         <stripe-buy-button
           buy-button-id="buy_btn_1TVmXLLM5iX9X76Dd5vtflsp"
           publishable-key="pk_live_51TVmFpLM5iX9X76D2Nq6dWGfEFrGExfnaJ6USZEAM2cXHRwzh60TpST6J14XwzNA7f3hAVFma2OjzFz0aR25vWgx00d2N0KBkD"
-          customer-email="" id="stripeEmailStandard">
+          success-url="https://pawportraits.shop/?payment=success">
         </stripe-buy-button>
       </div>
       <div id="buyBtnFamily" style="display:none; justify-content:center;">
         <stripe-buy-button
           buy-button-id="buy_btn_1TZOA0LM5iX9X76DlK2fsvSM"
           publishable-key="pk_live_51TVmFpLM5iX9X76D2Nq6dWGfEFrGExfnaJ6USZEAM2cXHRwzh60TpST6J14XwzNA7f3hAVFma2OjzFz0aR25vWgx00d2N0KBkD"
-          customer-email="" id="stripeEmailFamily">
+          success-url="https://pawportraits.shop/?payment=success">
         </stripe-buy-button>
       </div>
     </div>
@@ -1061,6 +1061,22 @@ const PRICES = {
 
 let selectedPkg = null;
 emailjs.init(EMAILJS_PUBLIC_KEY);
+
+// ── Fire owner email after confirmed Stripe payment ──────
+(function() {
+  if (new URLSearchParams(window.location.search).get('payment') === 'success') {
+    const raw = sessionStorage.getItem('pp_order');
+    if (raw) {
+      const order = JSON.parse(raw);
+      sessionStorage.removeItem('pp_order');
+      // Clean URL without reloading
+      history.replaceState(null, '', window.location.pathname);
+      // Send owner notification now payment is confirmed
+      emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_OWNER_TEMPLATE, order)
+        .catch(function(e) { console.error('Owner email failed:', e); });
+    }
+  }
+})();
 
 // ── Modal controls ───────────────────────────────────────
 function openModal(e) {
@@ -1220,22 +1236,22 @@ async function submitAndPay() {
 
     txt.textContent = 'Sending your order…';
 
-    // 2. Email the owner (you)
-    await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_OWNER_TEMPLATE, {
-      customer_name:  name,
-      customer_email: email,
-      package:        PRICES[selectedPkg].label + ' (' + PRICES[selectedPkg].amount + ')',
-      pet_details:    pets || 'Not provided',
-      photo_urls:     peopleUrls + '\n' + petUrls
-    });
-
-    // 3. Email the customer
+    // 2. Email the customer confirmation (photos received)
     await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_CUST_TEMPLATE, {
       customer_name:  name,
       customer_email: email,
       package:        PRICES[selectedPkg].label,
       pet_details:    pets || 'Not provided'
     });
+
+    // 3. Save order data to sessionStorage — owner email fires AFTER payment confirmed
+    sessionStorage.setItem('pp_order', JSON.stringify({
+      customer_name:  name,
+      customer_email: email,
+      package:        PRICES[selectedPkg].label + ' (' + PRICES[selectedPkg].amount + ')',
+      pet_details:    pets || 'Not provided',
+      photo_urls:     peopleUrls + '\n' + petUrls
+    }));
 
     // 4. Show pay step with embedded Stripe Buy Button
     showStep(5);
