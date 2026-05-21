@@ -552,6 +552,7 @@
     #examples .reveal > div[style*="grid-template-columns: 1fr 1fr"] { grid-template-columns: 1fr !important; }
   }
 </style>
+<script async src="https://js.stripe.com/v3/buy-button.js"></script>
 </head>
 <body>
 
@@ -974,15 +975,28 @@
       <button class="form-submit" id="submitBtn" onclick="submitAndPay()">
         <span id="submitBtnText">Send Photos &amp; Pay →</span>
       </button>
-      <p class="form-note">Photos sent securely. You'll be taken to Stripe to complete payment.</p>
+      <p class="form-note">Photos sent securely. Pay in the next step — you won't leave this page.</p>
     </div>
 
-    <!-- STEP 5: SUCCESS -->
+    <!-- STEP 5: PAY -->
     <div id="step5" style="display:none; text-align:center; padding:20px 0;">
-      <div style="font-size:64px; margin-bottom:16px;">🐾</div>
-      <h3 style="font-family:'Fraunces',serif; font-size:26px; font-weight:800; margin-bottom:10px;">Photos received!</h3>
-      <p style="color:rgba(248,246,241,0.55); font-size:15px; line-height:1.65; margin-bottom:24px;">Complete your payment on the next page and we'll get started on your portrait straight away. You'll have it in your inbox within 24 hours.</p>
-      <button onclick="closeModal()" style="background:var(--cyan); color:var(--cyan-dark); border:none; border-radius:100px; padding:12px 32px; font-weight:700; font-size:15px; cursor:pointer;">Done</button>
+      <div style="font-size:52px; margin-bottom:12px;">🐾</div>
+      <h3 style="font-family:'Fraunces',serif; font-size:24px; font-weight:800; margin-bottom:8px;">Photos received!</h3>
+      <p style="color:rgba(248,246,241,0.55); font-size:14px; line-height:1.6; margin-bottom:24px;">Complete your payment below — you stay right here on the page. Your portrait lands in your inbox within 24 hours.</p>
+      <div id="buyBtnStandard" style="display:none; justify-content:center;">
+        <stripe-buy-button
+          buy-button-id="buy_btn_1TVmXLLM5iX9X76Dd5vtflsp"
+          publishable-key="pk_live_51TVmFpLM5iX9X76D2Nq6dWGfEFrGExfnaJ6USZEAM2cXHRwzh60TpST6J14XwzNA7f3hAVFma2OjzFz0aR25vWgx00d2N0KBkD"
+          customer-email="" id="stripeEmailStandard">
+        </stripe-buy-button>
+      </div>
+      <div id="buyBtnFamily" style="display:none; justify-content:center;">
+        <stripe-buy-button
+          buy-button-id="buy_btn_1TZOA0LM5iX9X76DlK2fsvSM"
+          publishable-key="pk_live_51TVmFpLM5iX9X76D2Nq6dWGfEFrGExfnaJ6USZEAM2cXHRwzh60TpST6J14XwzNA7f3hAVFma2OjzFz0aR25vWgx00d2N0KBkD"
+          customer-email="" id="stripeEmailFamily">
+        </stripe-buy-button>
+      </div>
     </div>
 
   </div>
@@ -1223,14 +1237,18 @@ async function submitAndPay() {
       pet_details:    pets || 'Not provided'
     });
 
-    // 4. Show success screen, then open Stripe
+    // 4. Show pay step with embedded Stripe Buy Button
     showStep(5);
-    setTimeout(() => {
-      window.open(
-        PAYMENT_LINKS[selectedPkg] + '?prefilled_email=' + encodeURIComponent(email),
-        '_blank'
-      );
-    }, 1200);
+    // Show correct buy button for selected package
+    const standardBtn = document.getElementById('buyBtnStandard');
+    const familyBtn   = document.getElementById('buyBtnFamily');
+    standardBtn.style.display = 'none';
+    familyBtn.style.display   = 'none';
+    if (selectedPkg === 'standard') {
+      standardBtn.style.display = 'flex';
+    } else {
+      familyBtn.style.display = 'flex';
+    }
 
   } catch (e) {
     console.error(e);
