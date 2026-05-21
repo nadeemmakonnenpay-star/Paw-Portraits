@@ -1236,22 +1236,22 @@ async function submitAndPay() {
 
     txt.textContent = 'Sending your order…';
 
-    // 2. Email the customer confirmation (photos received)
+    // 2. Email the owner with full order details + photo links
+    await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_OWNER_TEMPLATE, {
+      customer_name:  name,
+      customer_email: email,
+      package:        PRICES[selectedPkg].label + ' (' + PRICES[selectedPkg].amount + ')',
+      pet_details:    pets || 'Not provided',
+      photo_urls:     peopleUrls + '\n' + petUrls
+    });
+
+    // 3. Email the customer confirmation (photos received)
     await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_CUST_TEMPLATE, {
       customer_name:  name,
       customer_email: email,
       package:        PRICES[selectedPkg].label,
       pet_details:    pets || 'Not provided'
     });
-
-    // 3. Save order data to sessionStorage — owner email fires AFTER payment confirmed
-    sessionStorage.setItem('pp_order', JSON.stringify({
-      customer_name:  name,
-      customer_email: email,
-      package:        PRICES[selectedPkg].label + ' (' + PRICES[selectedPkg].amount + ')',
-      pet_details:    pets || 'Not provided',
-      photo_urls:     peopleUrls + '\n' + petUrls
-    }));
 
     // 4. Show pay step with embedded Stripe Buy Button
     showStep(5);
