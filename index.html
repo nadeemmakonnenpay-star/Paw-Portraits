@@ -1208,7 +1208,7 @@ async function uploadToImgBB(file) {
   const res = await fetch('https://api.imgbb.com/1/upload', { method: 'POST', body: fd });
   if (!res.ok) throw new Error('Upload failed for ' + file.name);
   const data = await res.json();
-  return data.data.url;
+  return data.data.url_viewer;
 }
 
 // ── Submit & Pay ─────────────────────────────────────────
