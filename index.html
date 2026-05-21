@@ -1048,7 +1048,7 @@ const EMAILJS_PUBLIC_KEY     = 'ayKNOdAVstT6DbOTa';
 const EMAILJS_SERVICE_ID     = 'service_nkyco2v';
 const EMAILJS_OWNER_TEMPLATE = 'template_bdc1er6';
 const EMAILJS_CUST_TEMPLATE  = 'template_m0xl9rk';
-const UPLOADCARE_PUB_KEY     = '91848af8cf3eb94189be';
+const IMGBB_API_KEY          = 'c78cbf23601850d641dff5d4d25633f9';
 
 const PAYMENT_LINKS = {
   standard: 'https://buy.stripe.com/cNibJ2cnR0IFgLE04T0ZW00',
@@ -1195,15 +1195,20 @@ function handleFiles(input, previewsId, contentId, countId) {
 }
 
 // ── Uploadcare ───────────────────────────────────────────
-async function uploadToUploadcare(file) {
+async function uploadToImgBB(file) {
+  const base64 = await new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload  = () => resolve(reader.result.split(',')[1]);
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
   const fd = new FormData();
-  fd.append('UPLOADCARE_PUB_KEY', UPLOADCARE_PUB_KEY);
-  fd.append('UPLOADCARE_STORE', '1');
-  fd.append('file', file);
-  const res = await fetch('https://upload.uploadcare.com/base/', { method: 'POST', body: fd });
+  fd.append('key', IMGBB_API_KEY);
+  fd.append('image', base64);
+  const res = await fetch('https://api.imgbb.com/1/upload', { method: 'POST', body: fd });
   if (!res.ok) throw new Error('Upload failed for ' + file.name);
   const data = await res.json();
-  return 'https://ucarecdn.com/' + data.file + '/';
+  return data.data.url;
 }
 
 // ── Submit & Pay ─────────────────────────────────────────
@@ -1226,7 +1231,7 @@ async function submitAndPay() {
     const urls = [];
     for (let i = 0; i < allFiles.length; i++) {
       txt.textContent = 'Uploading photos… (' + (i + 1) + ' of ' + allFiles.length + ')';
-      urls.push(await uploadToUploadcare(allFiles[i]));
+      urls.push(await uploadToImgBB(allFiles[i]));
     }
 
     const peopleUrls = urls.slice(0, peopleFiles.length)
